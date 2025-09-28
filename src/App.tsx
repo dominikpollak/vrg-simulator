@@ -41,16 +41,25 @@ const App = () => {
           addEntity(data.payload);
           addLogMessage(`Vytvořena nová jednotka: ${data.payload.callsign}`);
           break;
-        case "update":
-          data.payload.forEach((entityUpdate: Entity) => {
-            updateEntity(entityUpdate);
-            if (!entityUpdate.route.length) {
-              addLogMessage(`Trasa jednotky ${entityUpdate.callsign} smazána.`);
-              return;
+        case "update": {
+          //this handles that multiple entities can move at once
+          const list = Array.isArray(data.payload)
+            ? data.payload
+            : [data.payload];
+
+          for (const update of list) {
+            updateEntity(update);
+
+            if ("route" in update) {
+              if (!update.route || update.route.length === 0) {
+                addLogMessage(`Trasa jednotky ${update.callsign} smazána.`);
+              } else {
+                addLogMessage(`Trasa jednotky ${update.callsign} změněna.`);
+              }
             }
-            addLogMessage(`Trasa jednotky ${entityUpdate.callsign} změněna.`);
-          });
+          }
           break;
+        }
         case "destroy":
           removeEntity(data.payload.id);
           addLogMessage(`Jednotka ${data.payload.id} zničena.`);
